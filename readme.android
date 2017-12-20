@@ -1,0 +1,21 @@
+Instructions to build sqlcipher for Android
+
+* Extract Android build toolChain from NDK
+1. Download android-ndk-r10e
+2. Create android build toolchain
+$NDK/build/tools/make-standalone-toolchain.sh --arch=arm --install-dir=<ANDROID_BUILD_TOOLCHAIN>
+3. Export some environment variables
+export ANDROID_BUILD_TOOLCHAIN=<ANDROID_BUILD_TOOLCHAIN>
+export PATH=$ANDROID_BUILD_TOOLCHAIN/bin;$PATH
+export CROSS_SYSROOT=$ANDROID_BUILD_TOOLCHAIN/sysroot	# important for cross compile
+
+* Build OpenSSL
+1. Download openssl-1.1.0g
+2. Build OpenSSL
+./Configure no-shared --cross-compile-prefix=arm-linux-androideabi- android-armeabi
+make
+make install DESTDIR=$CROSS_SYSROOT
+
+* Build sqlcipher
+./configure --disable-shared --enable-static=yes --enable-tempstore=yes CFLAGS="-fPIE -DSQLITE_HAS_CODEC -I$CROSS_SYSROOT/usr/local/include" LDFLAGS="-fPIE -pie -L$CROSS_SYSROOT/usr/local/lib $CROSS_SYSROOT/usr/local/lib/libcrypto.a" --host=arm-linux-androideabi
+make
